@@ -13,23 +13,27 @@ import SpriteKit
 
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
-    
-    let emojis = ["👽", "👺", "👻", "👹", "🤖", "🧌"]
-    var score = 0
-    var lives = 3
     var emojiNode: SKLabelNode!
+    var emojiNode2: SKLabelNode!
+    
+
+    var score = 0
+    static var lives = 5
+    static var dead = false
     
     let random = Int.random(in: 100..<300)
     let moveRight = SKAction.move(by: CGVector(dx: Int.random(in: 100..<300), dy: 0), duration: 1.5)
     let moveLeft = SKAction.move(by: CGVector(dx: Int.random(in: -300 ... -100), dy: 0), duration: 1.8)
     
     
-
+    
    
     
     struct PhysicsCategory {
         static let Emoji: UInt32 = 1
         static let Platform: UInt32 = 2
+        static let Shooter: UInt32 = 3
+        static let Bullet: UInt32 = 4
         
     }
     
@@ -44,7 +48,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.fontColor = .green
         addChild(scoreLabel)
         
-        lifeCount.text = "❤️: \(lives)"
+        lifeCount.text = "❤️: \(GameScene.lives)"
         lifeCount.fontSize = 25
         lifeCount.position = CGPoint(x: UIScreen.main.bounds.maxX - 100, y: UIScreen.main.bounds.maxY - 125)
         lifeCount.fontColor = .red
@@ -57,6 +61,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         createPlatform()
         gameStarted()
+        
+        if GameScene.lives == 0 {
+            GameScene.dead = false
+        }
     }
     
     
@@ -64,7 +72,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let platform = SKSpriteNode()
         platform.size = CGSize(width: 500, height: 50)
         platform.color = .blue
-        platform.position = CGPoint(x: 200, y: 200)
+        platform.position = CGPoint(x: 200, y: 25)
         
         //        setting the size of it to the size of platform
         platform.physicsBody = SKPhysicsBody(rectangleOf: platform.size)
@@ -81,48 +89,101 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func gameStarted() {
         
+        createShooter()
         let create1 = SKAction.run { [unowned self] in
-            self.createEmoji(pos: CGPoint(x: 10, y: 700), move: moveRight)
+            createEmoji(move: moveRight)
         }
-        let create2 = SKAction.run { [unowned self] in
-            self.createEmoji(pos: CGPoint(x: 300, y: 750), move: moveLeft)
-        }
+      
         
-        let wait = SKAction.wait(forDuration: 1.5)
-        let sequence = SKAction.sequence([create1, wait, create2])
+        let wait = SKAction.wait(forDuration: 2.5)
+        let sequence = SKAction.sequence([create1, wait])
         let repeatForever = SKAction.repeatForever(sequence)
         run(repeatForever)
         
     }
     
     
-    func createEmoji(pos: CGPoint, move: SKAction) {
+    func createEmoji(move: SKAction) {
+        let emojis = ["👽", "👺", "👻", "👹", "🤖", "🧌"]
         
         let randomIndex = Int.random(in: 0..<emojis.count)
+        let randomIndex2 = Int.random(in: 0..<emojis.count)
+        let randomHeight = Int.random(in: 500...700)
+        let randomHeight2 = Int.random(in: 500...700)
+        
+        
+        
+        
         if emojiNode == nil {
             emojiNode = SKLabelNode(fontNamed: "Helvetica")
+            emojiNode.text = emojis[randomIndex]
+            emojiNode.fontSize = 50
+            emojiNode.position = CGPoint(x: 10, y: randomHeight)
+            emojiNode.physicsBody = SKPhysicsBody(rectangleOf: emojiNode.frame.size)
+            emojiNode.physicsBody?.restitution = 0.5
+            emojiNode.name = emojis[randomIndex]
+         
+            emojiNode.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
+            emojiNode.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
+            addChild(emojiNode)
+        } else {
+            emojiNode.removeFromParent()
+            emojiNode = SKLabelNode(fontNamed: "Helvetica")
+            emojiNode.text = emojis[randomIndex]
+            emojiNode.fontSize = 50
+            emojiNode.position = CGPoint(x: 10, y: randomHeight)
+            emojiNode.physicsBody = SKPhysicsBody(rectangleOf: emojiNode.frame.size)
+            emojiNode.physicsBody?.restitution = 0.5
+            emojiNode.name = emojis[randomIndex]
+            
+            emojiNode.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
+            emojiNode.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
+            addChild(emojiNode)
         }
         
-        emojiNode.text = emojis[randomIndex]
-        emojiNode.fontSize = 50
-        emojiNode.position = pos
-        emojiNode.physicsBody = SKPhysicsBody(rectangleOf: emojiNode.frame.size)
-        emojiNode.physicsBody?.restitution = 0.5
-        emojiNode.name = emojis[randomIndex]
+         
         
-        emojiNode.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
-        emojiNode.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
         
-        addChild(emojiNode)
+        if emojiNode2 == nil {
+            emojiNode2 = SKLabelNode(fontNamed: "Helvetica")
+            emojiNode2.text = emojis[randomIndex2]
+            emojiNode2.fontSize = 50
+            emojiNode2.position = CGPoint(x: 370, y: randomHeight2)
+            emojiNode2.physicsBody = SKPhysicsBody(rectangleOf: emojiNode2.frame.size)
+            emojiNode2.physicsBody?.restitution = 0.5
+            emojiNode2.name = emojis[randomIndex2]
+            
+            emojiNode2.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
+            emojiNode2.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
+            addChild(emojiNode2)
+        } else {
+            emojiNode2.removeFromParent()
+            emojiNode2 = SKLabelNode(fontNamed: "Helvetica")
+            emojiNode2.text = emojis[randomIndex2]
+            emojiNode2.fontSize = 50
+            emojiNode2.position = CGPoint(x: 370, y: randomHeight2)
+            emojiNode2.physicsBody = SKPhysicsBody(rectangleOf: emojiNode2.frame.size)
+            emojiNode2.physicsBody?.restitution = 0.5
+            emojiNode2.name = emojis[randomIndex2]
+            
+            emojiNode2.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
+            emojiNode2.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
+            addChild(emojiNode2)
+        }
+        
+        
         
         //Animations
        
-        let wait = SKAction.wait(forDuration: Double.random(in: 1..<2.2))
-        let sequence = SKAction.sequence([move, wait])
+        let wait = SKAction.wait(forDuration: Double.random(in: 1..<2.5))
+        let wait2 = SKAction.wait(forDuration: Double.random(in: 1..<2.5))
+        let sequence = SKAction.sequence([moveRight, wait])
+        let sequence2 = SKAction.sequence([moveLeft, wait2])
         
         let repeatSequence = SKAction.repeatForever(sequence)
+        let repeatSequence2 = SKAction.repeatForever(sequence2)
         emojiNode.run(repeatSequence)
-        
+        emojiNode2.run(repeatSequence2)
         func handleTap(at location: CGPoint) {
             print("Tapped")
         }
@@ -132,23 +193,93 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         let collisionObject = contact.bodyA.categoryBitMask == PhysicsCategory.Platform ? contact.bodyB : contact.bodyA
         
+        let collisionBullet = contact.bodyA.categoryBitMask == PhysicsCategory.Bullet ? contact.bodyB : contact.bodyA
+        
+        if collisionBullet.categoryBitMask == PhysicsCategory.Emoji {
+            contact.bodyB.node?.removeFromParent()
+            contact.bodyA.node?.removeFromParent()
+           
+            score += 1
+            scoreLabel.text = "Score: \(score)"
+        }
+        
         if collisionObject.categoryBitMask == PhysicsCategory.Emoji {
             contact.bodyB.node?.removeFromParent()
+            GameScene.lives -= 1
+            lifeCount.text = "❤️: \(GameScene.lives)"
+            
+            
             
         }
     }
     
+    let ship = SKSpriteNode()
     
-//    what happens when an emoji is touched
+    func createShooter() {
+        ship.size = CGSize(width: 50, height: 50)
+        ship.color = .systemTeal
+        ship.position = CGPoint(x: UIScreen.main.bounds.width / 2,y:UIScreen.main.bounds.minY + 100)
+        
+        ship.physicsBody = SKPhysicsBody(rectangleOf: ship.frame.size)
+        ship.physicsBody?.isDynamic = false
+        ship.physicsBody!.affectedByGravity = false
+        ship.physicsBody!.usesPreciseCollisionDetection = true
+        
+        ship.physicsBody!.categoryBitMask = PhysicsCategory.Shooter
+        ship.physicsBody!.contactTestBitMask = PhysicsCategory.Emoji
+        
+        addChild(ship)
+ 
+        
+    }
+    
+    func createBullet() {
+        let bullet = SKShapeNode(circleOfRadius: 5)
+        
+        bullet.fillColor = .red
+        bullet.strokeColor = bullet.fillColor
+        bullet.name = "Bullet"
+        bullet.position = CGPoint(x: ship.position.x, y: ship.position.y + 20)
+        
+        bullet.physicsBody = SKPhysicsBody(rectangleOf: bullet.frame.size)
+        bullet.physicsBody?.isDynamic = false
+        bullet.physicsBody!.affectedByGravity = false
+        bullet.physicsBody!.usesPreciseCollisionDetection = true
+        
+        
+        
+        bullet.physicsBody!.categoryBitMask = PhysicsCategory.Bullet
+        bullet.physicsBody!.contactTestBitMask = PhysicsCategory.Emoji
+        
+        addChild(bullet)
+        
+        //Bullet movement
+        let moveup = SKAction.move(by: CGVector(dx: 0, dy: 800), duration: 2)
+        let delete = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([moveup, delete])
+        
+        bullet.run(sequence)
+        
+    }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for _ in touches {
+            createBullet()
+        }
+        
+    }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
-            if location == emojiNode.position {
-                score += 1
-                print("Tapped")
-            }
+            let newlocation = CGPoint(x: location.x, y: ship.position.y)
+            let move = SKAction.move(to: newlocation, duration: 0.1)
             
-
+            ship.run(move)
+            
+            
         }
     }
+    
+//    what happens when an emoji is touched
+    
 }
