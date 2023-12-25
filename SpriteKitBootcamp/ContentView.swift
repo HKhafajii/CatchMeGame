@@ -10,28 +10,28 @@ import SpriteKit
 
 struct ContentView: View {
     let screenWidth = UIScreen.main.bounds.width
-    let screenHeight = UIScreen.main.bounds.height 
+    let screenHeight = UIScreen.main.bounds.height
     
     var scene: SKScene {
-        let scene = GameScene()
+        let scene = MainScreen()
         scene.size = CGSize(width: screenWidth, height: screenHeight)
         scene.backgroundColor = .gray
-       
+        
         return scene
         
     }
     
     var body: some View {
-        if GameScene.dead == false {
-            VStack {
-                
-                SpriteView(scene: scene)
-                    .frame(width: screenWidth, height: screenHeight)
-                    .ignoresSafeArea()
-                Spacer()
-            }
+        
+        VStack {
+            
+            SpriteView(scene: scene)
+                .frame(width: screenWidth, height: screenHeight)
+                .ignoresSafeArea()
+            Spacer()
+            
         }
-          
+        
     }
 }
 

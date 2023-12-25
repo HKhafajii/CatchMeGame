@@ -9,6 +9,37 @@ import Foundation
 import SpriteKit
 
 
+class MainScreen: SKScene {
+    override func didMove(to view: SKView) {
+        createButton()
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            enumerateChildNodes(withName: "//*") { node, stop in
+                if node.name == "Start" {
+                    if node.contains(touch.location(in: self)) {
+                        
+                        print("Started")
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
+    let startButton = SKLabelNode(fontNamed: "Helvetica")
+    func createButton() {
+        startButton.text = "Start Game"
+        startButton.fontSize = 25
+        startButton.position = CGPoint(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY)
+        startButton.fontColor = .white
+        startButton.name = "Start"
+        addChild(startButton)
+    }
+    
+}
 
 
 
@@ -16,10 +47,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var emojiNode: SKLabelNode!
     var emojiNode2: SKLabelNode!
     
-
     var score = 0
     static var lives = 5
-    static var dead = false
+    var isGameStarted = false
     
     let random = Int.random(in: 100..<300)
     let moveRight = SKAction.move(by: CGVector(dx: Int.random(in: 100..<300), dy: 0), duration: 1.5)
@@ -27,7 +57,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     
-   
+    
     
     struct PhysicsCategory {
         static let Emoji: UInt32 = 1
@@ -48,6 +78,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.fontColor = .green
         addChild(scoreLabel)
         
+        
+        
         lifeCount.text = "❤️: \(GameScene.lives)"
         lifeCount.fontSize = 25
         lifeCount.position = CGPoint(x: UIScreen.main.bounds.maxX - 100, y: UIScreen.main.bounds.maxY - 125)
@@ -58,13 +90,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsWorld.gravity = CGVector(dx: 0.0, dy: -3.0)
         self.physicsWorld.contactDelegate = self
         
-        
-        createPlatform()
-        gameStarted()
-        
-        if GameScene.lives == 0 {
-            GameScene.dead = false
+        if isGameStarted == true {
+            createPlatform()
+            gameStarted()
         }
+        
+        
     }
     
     
@@ -93,7 +124,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let create1 = SKAction.run { [unowned self] in
             createEmoji(move: moveRight)
         }
-      
+        
         
         let wait = SKAction.wait(forDuration: 2.5)
         let sequence = SKAction.sequence([create1, wait])
@@ -122,7 +153,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             emojiNode.physicsBody = SKPhysicsBody(rectangleOf: emojiNode.frame.size)
             emojiNode.physicsBody?.restitution = 0.5
             emojiNode.name = emojis[randomIndex]
-         
+            
             emojiNode.physicsBody!.categoryBitMask = PhysicsCategory.Emoji
             emojiNode.physicsBody!.contactTestBitMask = PhysicsCategory.Platform
             addChild(emojiNode)
@@ -141,7 +172,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(emojiNode)
         }
         
-         
+        
         
         
         if emojiNode2 == nil {
@@ -174,7 +205,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         
         //Animations
-       
+        
         let wait = SKAction.wait(forDuration: Double.random(in: 1..<2.5))
         let wait2 = SKAction.wait(forDuration: Double.random(in: 1..<2.5))
         let sequence = SKAction.sequence([moveRight, wait])
@@ -198,7 +229,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if collisionBullet.categoryBitMask == PhysicsCategory.Emoji {
             contact.bodyB.node?.removeFromParent()
             contact.bodyA.node?.removeFromParent()
-           
+            
             score += 1
             scoreLabel.text = "Score: \(score)"
         }
@@ -229,9 +260,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ship.physicsBody!.contactTestBitMask = PhysicsCategory.Emoji
         
         addChild(ship)
- 
+        
         
     }
+    
+    
     
     func createBullet() {
         let bullet = SKShapeNode(circleOfRadius: 5)
@@ -265,6 +298,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for _ in touches {
             createBullet()
+            
+            
         }
         
     }
@@ -276,10 +311,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             ship.run(move)
             
-            
         }
     }
-    
-//    what happens when an emoji is touched
-    
 }
